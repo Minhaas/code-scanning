@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon May 6 2019
 
-@author: Seahymn, Daniel Lin
-"""
 import pickle
 import csv
 import os
