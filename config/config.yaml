@@ -2,12 +2,12 @@ embedding_settings:
     data_path: 'data/'                                # The path of the code base for training the embedding model.
     embedding_model_saved_path: 'embedding/'             # The output path of the trained embedding model.
     seed: 1                                            # Seed for the random number generator.
-    n_workers: 4                                       # Number of threads for training.
+    n_workers: 8                                      # Number of threads for training.
     word2vec:
         size: 100                                      # Dimensionality of the word vectors. This is the Embedding dimension.
         window: 5                                       # Maximum distance between the current and predicted word within a sentence.
         min_count: 5                                    # Ignores all words with total frequency lower than this.
-        algorithm: 0                                    # Training algorithm: 1 for skip-gram; otherwise CBOW.                                       # Number of iterations (epochs) over the corpus.
+        algorithm: 1                                    # Training algorithm: 1 for skip-gram; otherwise CBOW.                                       # Number of iterations (epochs) over the corpus.
 
 
 model_settings:
@@ -21,8 +21,8 @@ model_settings:
     max_sequence_length: 1000
     use_dropout: True
     dropout_rate: 0.5
-    dnn_size: 128                             # The number of neurons used for DNN (the first layer)
-    rnn_size: 128                             # The number of neurons used for RNN (the first layer)
+    dnn_size: 64 #128                           # The number of neurons used for DNN (the first layer)
+    rnn_size: 64     #128                        # The number of neurons used for RNN (the first layer)
     birnn_size: 64                            # The number of neurons used for Bi-RNN (the first layer)
     embedding_trainable: False
     
@@ -35,7 +35,7 @@ training_settings:
     network_config:
         batch_size: 16
         epochs: 150
-        patcience: 35
+        patcience: 10 #35
         save_training_history: True
         plot_training_history: True
         validation_metric: 'val_loss'

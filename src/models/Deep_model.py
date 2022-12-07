@@ -53,7 +53,6 @@ class Deep_model(object):
         dense_3 = Dense(1, activation='sigmoid')(dense_2)
         
         model = Model(inputs=inputs, outputs = dense_3, name='LSTM_network')
-        
         model.compile(loss=self.LOSS_FUNCTION,
                  optimizer=self.OPTIMIZER,
                  metrics=['accuracy'])

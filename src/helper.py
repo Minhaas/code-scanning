@@ -95,11 +95,7 @@ class Helper():
     def modelLoader(self):
         trained_model_path = self.paras.trained_model
         if os.path.isfile(trained_model_path):
-            # Load the model and print the model details.
-            if (str(self.config['model_settings']['model']).lower() == 'han'):
-                trained_model = load_model(trained_model_path, custom_objects = {'AttentionLayer': AttentionLayer})
-            else:
-                trained_model = load_model(trained_model_path)
+            trained_model = load_model(trained_model_path)
             trained_model.summary()
             return trained_model
         else:
@@ -235,14 +231,10 @@ class Tester(Helper):
         if not self.config['training_settings']['using_separate_test_set']:
             total_list, total_list_id = self.loadData(self.paras.data_dir)
             self.verbose("Pad the sequence to unified length...")
-            embedding_method = str(self.paras.embedding).lower()
-            # if embedding_method == 'elmo':
-            #     total_list_pad = [' '.join(t.split()[0:self.ELMo_padding]) for t in total_list]
-            # else:
             tokenizer = self.LoadToknizer(self.tokenizer_saved_path + 'tokenizer.pickle')
             total_sequence = tokenizer.texts_to_sequences(total_list)
             total_list_pad = self.padding(total_sequence)
-            self.verbose("Patition the data ....")
+            self.verbose("Partition the data ....")
             tuple_with_test = self.patitionData(total_list_pad, total_list_id)  
             test_set_x = tuple_with_test[6] 
             test_set_y = np.asarray(tuple_with_test[7]).flatten()
@@ -254,9 +246,6 @@ class Tester(Helper):
             test_list, test_list_id = self.loadData(self.config['training_settings']['test_set_path'])  
             self.verbose("Pad the sequence to unified length...")
             embedding_method = str(self.paras.embedding).lower()
-            # if embedding_method == 'elmo':
-            #     test_list_pad = [' '.join(t.split()[0:self.ELMo_padding]) for t in test_list]
-            # else:
             tokenizer = self.LoadToknizer(self.tokenizer_saved_path + 'tokenizer.pickle')
             test_sequence = tokenizer.texts_to_sequences(test_list)
             test_list_pad = self.padding(test_sequence)
@@ -298,58 +287,58 @@ class Tester(Helper):
         result_set = pd.DataFrame(zippedlist, columns = ['Function_ID', 'Probs. of being vulnerable', 'Label'])
         ListToCSV(result_set, self.paras.output_dir + os.sep + self.config['model_settings']['model'] + '_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '_result.csv')
           
-class GetRepresentation(Helper):
-    ''' Handler for complete inference progress'''
-    def __init__(self,config,paras):
-        super(GetRepresentation, self).__init__(config,paras)
-        self.verbose('Obtain representations from trained model....')
+# class GetRepresentation(Helper):
+#     ''' Handler for complete inference progress'''
+#     def __init__(self,config,paras):
+#         super(GetRepresentation, self).__init__(config,paras)
+#         self.verbose('Obtain representations from trained model....')
     
-    def ObtainRepresentations(self, input_sequences, layer_number, model):
-        layered_model = Model(inputs = model.input, outputs=model.layers[layer_number].output)
-        representations = layered_model.predict(input_sequences)
-        return representations
+#     def ObtainRepresentations(self, input_sequences, layer_number, model):
+#         layered_model = Model(inputs = model.input, outputs=model.layers[layer_number].output)
+#         representations = layered_model.predict(input_sequences)
+#         return representations
     
-    """
-    The size of the obtained representations can be very large when we obtain the representations
-    of many data samples at a time. The following method allows the representations to be obtained batch by batch. 
-    """
-    def ObtainRepresentations_by_batch_size(self, input_sequences, layer_number, model, BATCH_SIZE):
-        num_batches_per_epoch = int((len(input_sequences) - 1) / BATCH_SIZE) + 1
-        data_size = len(input_sequences)
-        representations_total = []
-        for batch_num in range(num_batches_per_epoch):
-            start_index = batch_num * BATCH_SIZE
-            end_index = min((batch_num + 1) * BATCH_SIZE, data_size)
-            print ("-------start_index------------")
-            print (start_index)
-            print ("-------end_index------------")
-            print (end_index)
-            layered_model = Model(inputs = model.input, outputs=model.layers[layer_number].output)
-            representations = layered_model.predict(input_sequences[start_index: end_index])
-            representations_total = representations_total + representations.tolist()
-        return np.asarray(representations_total)
+#     """
+#     The size of the obtained representations can be very large when we obtain the representations
+#     of many data samples at a time. The following method allows the representations to be obtained batch by batch. 
+#     """
+#     def ObtainRepresentations_by_batch_size(self, input_sequences, layer_number, model, BATCH_SIZE):
+#         num_batches_per_epoch = int((len(input_sequences) - 1) / BATCH_SIZE) + 1
+#         data_size = len(input_sequences)
+#         representations_total = []
+#         for batch_num in range(num_batches_per_epoch):
+#             start_index = batch_num * BATCH_SIZE
+#             end_index = min((batch_num + 1) * BATCH_SIZE, data_size)
+#             print ("-------start_index------------")
+#             print (start_index)
+#             print ("-------end_index------------")
+#             print (end_index)
+#             layered_model = Model(inputs = model.input, outputs=model.layers[layer_number].output)
+#             representations = layered_model.predict(input_sequences[start_index: end_index])
+#             representations_total = representations_total + representations.tolist()
+#         return np.asarray(representations_total)
     
-    def exec(self):
-        self.verbose ("Loading data from " + os.getcwd() + os.sep + self.paras.data_dir)
-        data_list, data_list_id = self.loadData(self.paras.data_dir)  
-        self.verbose("Pad the sequence to unified length...")
-        tokenizer = self.LoadToknizer(self.tokenizer_saved_path + 'tokenizer.pickle')
-        data_sequence = tokenizer.texts_to_sequences(data_list)
-        data_list_pad = self.padding(data_sequence)
-        self.verbose("Loading the trained model.")
-        model = self.modelLoader()
-        obtained_repre = self.ObtainRepresentations(data_list_pad, self.paras.layer, model)
-        #return obtained_repre
-        self.verbose("Saving the obtained representations....")
-        if not os.path.exists(self.paras.saved_path): os.makedirs(self.paras.saved_path)
-        SavedPickle(self.paras.saved_path + "obtain_reper.pkl", obtained_repre)
-        # When the obtained representations are 2-D arrays, we can also save them in a CSV file.
-        #ListToCSV(obtained_repre, self.paras.saved_path)
-        self.verbose("The obtained representations are saved in: " + str(self.paras.saved_path) + ".")
+#     def exec(self):
+#         self.verbose ("Loading data from " + os.getcwd() + os.sep + self.paras.data_dir)
+#         data_list, data_list_id = self.loadData(self.paras.data_dir)  
+#         self.verbose("Pad the sequence to unified length...")
+#         tokenizer = self.LoadToknizer(self.tokenizer_saved_path + 'tokenizer.pickle')
+#         data_sequence = tokenizer.texts_to_sequences(data_list)
+#         data_list_pad = self.padding(data_sequence)
+#         self.verbose("Loading the trained model.")
+#         model = self.modelLoader()
+#         obtained_repre = self.ObtainRepresentations(data_list_pad, self.paras.layer, model)
+#         #return obtained_repre
+#         self.verbose("Saving the obtained representations....")
+#         if not os.path.exists(self.paras.saved_path): os.makedirs(self.paras.saved_path)
+#         SavedPickle(self.paras.saved_path + "obtain_reper.pkl", obtained_repre)
+#         # When the obtained representations are 2-D arrays, we can also save them in a CSV file.
+#         #ListToCSV(obtained_repre, self.paras.saved_path)
+#         self.verbose("The obtained representations are saved in: " + str(self.paras.saved_path) + ".")
         
-        # Test attention visualization.
-        if (str(self.config['model_settings']['model']).lower() == 'han'):
-            from src.utils import visualize_attention
-            word_index = tokenizer.word_index
-            for i in range(len(data_list_pad)):
-                visualize_attention(data_list_pad, i, self.paras.layer, model, word_index, 15)
+#         # Test attention visualization.
+#         if (str(self.config['model_settings']['model']).lower() == 'han'):
+#             from src.utils import visualize_attention
+#             word_index = tokenizer.word_index
+#             for i in range(len(data_list_pad)):
+#                 visualize_attention(data_list_pad, i, self.paras.layer, model, word_index, 15)
